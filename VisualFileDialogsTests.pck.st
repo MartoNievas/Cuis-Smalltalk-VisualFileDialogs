@@ -757,18 +757,31 @@ test37WorldMenuHasFileInWithoutKeyboardShortcut
 	self deny: (WorldMorph new allMenuNshortcutsSpecs values anySatisfy: [:each | each size >= 5 and: [each fifth = #openFileIn]]).
 ! !
 
-!VisualFileDialogsTest methodsFor: 'tests - menus' stamp: 'VFDTests 7/Nov/2026 12:00:00'!
-test38BrowserExportMenusProvideShortcutAndSupportedActions
+!VisualFileDialogsTest methodsFor: 'tests - menus' stamp: 'VFD 11/18/2026 12:00:00'!
+test38BrowserExportMenusReplaceBuiltInActions
 
-	| specs |
+	| window widget originalSpecs specs exportSpecs |
+	window := BrowserWindow new.
+	widget := PluggableListMorph new.
+	window addMorph: widget.
 
-	specs := #(systemCatListMenuSpec systemCatSingletonMenuSpec classListMenuSpec messageCatListMenuSpec messageListMenuSpec)
-		collect: [:key | VisualFileDialogs perform: key].
-
-	specs do: [:spec |
-		self assert: spec size = 1.
-		self assert: spec first third = $O.
-		self assert: (Browser canUnderstand: spec first fifth)].
+	VisualFileDialogs browserMenuKeys do: [:key |
+		widget menuNshortcutsKey: key.
+		originalSpecs := (window perform: key) select: [:spec |
+			spec size >= 5 and: [spec fifth isSymbol and: [spec fifth beginsWith: 'fileOut']]].
+		specs := widget allMenuNshortcutsSpecs.
+		exportSpecs := specs values select: [:spec |
+			spec size >= 5 and: [spec fifth isSymbol and: [
+				(spec fifth beginsWith: 'fileOut') or: [spec fifth beginsWith: 'visualFileOut']]]].
+		self assert: originalSpecs notEmpty.
+		self assert: exportSpecs size = originalSpecs size.
+		originalSpecs do: [:original |
+			| replacement |
+			replacement := specs at: original first.
+			self assert: replacement second = original second.
+			self assert: replacement third = original third.
+			self assert: (replacement fifth beginsWith: 'visualFileOut').
+			self assert: (Browser canUnderstand: replacement fifth)]].
 ! !
 
 !VisualFileDialogsTest methodsFor: 'tests - menus' stamp: 'VFDTests 7/Nov/2026 12:00:00'!

@@ -10,7 +10,8 @@ This is the first release of the project (v1.0).
 - **VisualFileDialogs** — File In and File Out dialogs.
 - **VisualFileDialogsTests** — 50 SUnit regression tests.
 
-Requires Cuis with Morphic, SUnit and a VM providing `primitiveGetenv`.
+Requires Cuis 7.9 update #8348 or later, Morphic, SUnit and a VM providing
+`primitiveGetenv`.
 Goodies is not required.
 
 ## Installation
@@ -22,7 +23,8 @@ Install `VisualFileDialogsTests.pck.st` afterwards to run the tests.
 ## Usage
 
 - **File Out:** select a category, class, protocol or method in the Browser and
-  choose **File Out with Explorer (O)**, or press **Ctrl + Shift + O**.
+  choose **File Out**. Where the menu shows **(o)**, the usual Browser shortcut
+  opens the dialog. The class menu also offers **File Out Alphabetically**.
   Choose a destination, enter a file name and click **Save**.
 - **File In:** choose **File In with Explorer** from the World popup, select one or more
   `.st` or `.cs` files and click **File In**. It has no keyboard shortcut.

@@ -1,6 +1,7 @@
 'From Cuis7.9 [latest update: #8166] on 7 November 2026 at 12:00:00 pm'!
-'Description Morphic File Out and File In dialogs. Original File Out remains available.'!
+'Description Morphic File Out and File In dialogs. Browser File Out uses the visual save dialog.'!
 !provides: 'VisualFileDialogs' 1 0!
+!requires: 'Cuis-Base' '7.9.8348' '7.*.*'!
 SystemOrganization addCategory: #VisualFileDialogs!
 
 !classDefinition: #VisualFileDialogModel category: #VisualFileDialogs!
@@ -929,40 +930,36 @@ unload
 ! !
 
 
-!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFO 7/Nov/2026, 3:00:00 pm (UTC)'!
+!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFD 11/18/2026 12:00:00'!
 classListMenuSpec
 
-	^ self fileMenuSpecAt: 115 exportSelector: #visualFileOutClass
+	^ #(
+		#(100 'File Out' nil model visualFileOutClass fileOutIcon)
+		#(110 'File Out Alphabetically (o)' $o model visualFileOutClassAlphabetically fileOutIcon))
 ! !
 
-!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFO 7/Nov/2026, 3:00:00 pm (UTC)'!
-fileMenuSpecAt: position exportSelector: selector
-
-	^ { {position. 'File Out with Explorer (O)'. $O. #model. selector. #fileOutIcon} }
-! !
-
-!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFO 7/Nov/2026, 3:00:00 pm (UTC)'!
+!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFD 11/18/2026 12:00:00'!
 messageCatListMenuSpec
 
-	^ self fileMenuSpecAt: 15 exportSelector: #visualFileOutMessageCategory
+	^ #(#(10 'File Out (o)' $o model visualFileOutMessageCategory fileOutIcon))
 ! !
 
-!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFO 7/Nov/2026, 3:00:00 pm (UTC)'!
+!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFD 11/18/2026 12:00:00'!
 messageListMenuSpec
 
-	^ self fileMenuSpecAt: 55 exportSelector: #visualFileOutMessage
+	^ #(#(50 'File Out (o)' $o model visualFileOutMessage fileOutIcon))
 ! !
 
-!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFO 7/Nov/2026, 3:00:00 pm (UTC)'!
+!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFD 11/18/2026 12:00:00'!
 systemCatListMenuSpec
 
-	^ self fileMenuSpecAt: 75 exportSelector: #visualFileOutSystemCategory
+	^ #(#(70 'File Out (o)' $o model visualFileOutSystemCategory fileOutIcon))
 ! !
 
-!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFO 7/Nov/2026, 3:00:00 pm (UTC)'!
+!VisualFileDialogs class methodsFor: 'menu & kbd shortcuts' stamp: 'VFD 11/18/2026 12:00:00'!
 systemCatSingletonMenuSpec
 
-	^ self fileMenuSpecAt: 65 exportSelector: #visualFileOutSystemCategory
+	^ #(#(60 'File Out (o)' $o model visualFileOutSystemCategory fileOutIcon))
 ! !
 
 
@@ -1049,18 +1046,31 @@ browserMenuKeys
 	^ #(systemCatListMenuSpec systemCatSingletonMenuSpec classListMenuSpec messageCatListMenuSpec messageListMenuSpec)
 ! !
 
-!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFO 7/Nov/2026 12:00:00'!
+!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFD 11/18/2026 12:00:00'!
 visualFileOutClass
+
+	^ self visualFileOutClassSortedByCategory: true
+! !
+
+!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFD 11/18/2026 12:00:00'!
+visualFileOutClassAlphabetically
+
+	^ self visualFileOutClassSortedByCategory: false
+! !
+
+!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFD 11/18/2026 12:00:00'!
+visualFileOutClassSortedByCategory: sortByCategory
 
 	| aClass |
 	aClass := self selectedClass.
 	aClass ifNil: [ ^ self ].
 	^ VisualFileDialogs suggestedFileName: aClass name, '.st' writeStreamDo: [ :stream |
+		stream writeSystemTimeStamp.
 		aClass sharedPools notEmpty ifTrue: [aClass shouldFileOutPools ifTrue: [aClass fileOutSharedPoolsOn: stream]].
-		aClass fileOutOn: stream moveSource: false toFile: 0 ]
+		aClass fileOutOn: stream initializing: true sortMethodsByCategory: sortByCategory ]
 ! !
 
-!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFO 7/Nov/2026 12:00:00'!
+!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFD 11/18/2026 12:00:00'!
 visualFileOutSystemCategory
 
 	| category organizer |
@@ -1069,10 +1079,10 @@ visualFileOutSystemCategory
 	organizer := systemOrganizer.
 	^ VisualFileDialogs suggestedFileName: category asFileName, '.st' writeStreamDo: [ :stream |
 		(organizer withSubCategoriesOf: category) do: [ :each |
-			organizer fileOutCategory: each on: stream initializing: true ]]
+			organizer fileOutSystemCategory: each on: stream ]]
 ! !
 
-!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFO 7/Nov/2026 12:00:00'!
+!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFD 11/18/2026 12:00:00'!
 visualFileOutMessageCategory
 
 	| aClass category |
@@ -1081,19 +1091,21 @@ visualFileOutMessageCategory
 	(aClass isNil or: [category isNil]) ifTrue: [ ^ self ].
 	^ VisualFileDialogs suggestedFileName: aClass name, '-', category, '.st' writeStreamDo: [ :stream |
 		stream writeSystemTimeStamp.
-		aClass fileOutCategory: category on: stream moveSource: false toFile: 0 ]
+		aClass fileOutCategory: category on: stream ]
 ! !
 
-!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFO 7/Nov/2026 12:00:00'!
+!Browser methodsFor: '*VisualFileDialogs' stamp: 'VFD 11/18/2026 12:00:00'!
 visualFileOutMessage
 
 	| aClass selector |
 	aClass := self selectedClassOrMetaClass.
 	selector := self selectedMessageName.
 	(aClass isNil or: [selector isNil]) ifTrue: [ ^ self ].
-	^ VisualFileDialogs suggestedFileName: aClass name, '-', selector asFileName, '.st' writeStreamDo: [ :stream |
+	selector == #Comment ifTrue: [ ^ self inform: 'Sorry, cannot file out class comment in isolation.' ].
+	(aClass includesSelector: selector) ifFalse: [ ^ self error: 'Selector ', selector asPlainString, ' not found' ].
+	^ VisualFileDialogs suggestedFileName: (aClass name, '-', (selector copyReplaceAll: ':' with: '')) asFileName, '.st' writeStreamDo: [ :stream |
 		stream writeSystemTimeStamp.
-		aClass printMethodChunk: selector withPreamble: true on: stream moveSource: false toFile: 0 ]
+		aClass printMethodChunk: selector withPreamble: true on: stream ]
 ! !
 
 VisualFileDialogs initialize!
